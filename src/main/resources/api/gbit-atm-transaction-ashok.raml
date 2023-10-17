@@ -1,0 +1,95 @@
+#%RAML 1.0
+title: gbit-atm-transaction-ashok
+description: ATM Tranctions API
+version: 1.0
+mediaType: 
+- application/json
+protocols:
+  - HTTP
+  - HTTPS
+types:
+  createAccount: !include dataTypes/createAccount_dataType.raml
+  checkBalnce: !include  dataTypes/checkBalanceDataType.raml
+  withDraw: !include dataTypes/withDrawDataType.raml 
+  unblock: !include dataTypes/unblockDataType.raml
+traits:
+  customer_and_branch_Name: !include Traits/customer_and_branch_Name_Trait.raml
+  bank_and_type_name: !include Traits/bank_and_type_trait.raml
+  response_201: !include Traits/createAccountResponseTrait.raml
+  error400: !include Traits/error400.raml
+  resource: !include Traits/resorce.raml
+
+/createaccount:
+ post:
+   is: [customer_and_branch_Name, bank_and_type_name,error400]
+   body:
+     type: createAccount
+     example: !include examples/createaccount.json
+   responses:
+     201:
+       body:
+         application/json:
+           example: !include  examples/createAccountResponse.json
+     400:
+       body:
+         application/json:
+           example:
+             {
+               "status": "BAD REQUEST"
+             }
+
+/chechbalance:
+  post:
+    is: [bank_and_type_name] 
+    body:
+      type: checkBalnce
+      example: !include examples/checkBalance.json
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include examples/checkBalanceResponse.json
+/withdraw:
+  post:
+    is: [bank_and_type_name]
+    body:
+      type: withDraw
+      example: !include examples/withDraw.json
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include examples/withDrawResponse.json
+
+/unblock:
+  put:
+    body:
+      type: unblock
+      example: !include examples/unblock.json
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include examples/unblocktResponse.json
+
+              
+       
+    
+              
+        
+
+
+              
+                   
+  
+     
+        
+      
+    
+
+      
+    
+      
+    
+
+     

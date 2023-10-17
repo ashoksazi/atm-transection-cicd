@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "custName": {
+      "type": "string"
+    },
+    "custAccNum": {
+      "type": "string"
+    },
+    "atmPin": {
+      "type": "string"
+    },
+    "bankName": {
+      "type": "string"
+    },
+    "accountType": {
+      "type": "string"
+    },
+    "ifscCode": {
+      "type": "string"
+    },
+    "branchName": {
+      "type": "string"
+    },
+    "totalBalance": {
+      "type": "integer"
+      
+    },
+    "transactionTimeStamp": {
+      "type": "string"
+    },
+    "mailId": {
+      "type": "string"
+    },
+    "phoneNumber": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "custName",
+    "custAccNum",
+    "atmPin",
+    "bankName",
+    "accountType",
+    "ifscCode",
+    "branchName",
+    "transactionTimeStamp",
+    "mailId",
+    "phoneNumber"
+  ]
+}

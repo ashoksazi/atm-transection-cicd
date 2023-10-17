@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:s3="http://www.mulesoft.org/schema/mule/s3" xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:gmail="http://www.mulesoft.org/schema/mule/gmail" xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:sockets="http://www.mulesoft.org/schema/mule/sockets" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:rds="http://www.mulesoft.org/schema/mule/rds" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
+http://www.mulesoft.org/schema/mule/rds http://www.mulesoft.org/schema/mule/rds/current/mule-rds.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/sockets http://www.mulesoft.org/schema/mule/sockets/current/mule-sockets.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/gmail http://www.mulesoft.org/schema/mule/gmail/current/mule-gmail.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd">
+    <http:listener-config name="gbit-atm-transaction-ashok-httpListenerConfig">
+        <http:listener-connection host="${secure::listner.host}" port="${secure::listner.port}" />
+    </http:listener-config>
+    <apikit:config name="gbit-atm-transaction-ashok-config" api="gbit-atm-transaction-ashok.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <configuration doc:name="Configuration" doc:id="0de94ed9-d0fd-498f-b3c3-7b66bc78c18d" defaultErrorHandler-ref="global_error_handler" />
+	<global-property doc:name="Global Property" doc:id="8ddb4b26-473b-47fa-affb-1de32abb8555" name="gproperty" value="dev" />
+	<configuration-properties doc:name="Configuration properties" doc:id="4ec8f2d7-f32e-41ee-b74e-bec251a3da97" file="config\\${gproperty}.yaml" />
+	<db:config name="aws_rds" doc:name="Database Config" doc:id="e49af9cb-c053-4ca0-a1e8-45dc16667264" >
+		<db:my-sql-connection host="${secure::db.host}" port="${secure::db.port}" user="${secure::db.user}" password="${secure::db.password}" database="${secure::db.dbname}" />
+	</db:config>
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="eadba3e2-6613-48d7-95e2-308ea2e7f103" file="config\\${gproperty}.yaml" key="Ashok@@338@@">
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="b4e00783-2d05-4294-bb25-c33ad349d7b6" >
+		<email:smtps-connection host="smtp.gmail.com" user="sagikumar338@gmail.com" password="gspncecuwtyyelqo" >
+			<tls:context >
+				<tls:trust-store insecure="true" />
+			</tls:context>
+		</email:smtps-connection>
+	</email:smtp-config>
+	<s3:config name="Amazon_S3_Configuration" doc:name="Amazon S3 Configuration" doc:id="7f0dd002-10dd-4c11-bbf7-f7c9701ead85" >
+		<s3:connection accessKey="AKIAZL5TL23S4LMROKQG" secretKey="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" region="us-east-2"/>
+	</s3:config>
+	<flow name="gbit-atm-transaction-ashok-main">
+        <http:listener config-ref="gbit-atm-transaction-ashok-httpListenerConfig" path="${listner.path}">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="gbit-atm-transaction-ashok-config" />
+		<error-handler ref="global_error_handler" />
+       
+    </flow>
+    <flow name="gbit-atm-transaction-ashok-console">
+        <http:listener config-ref="gbit-atm-transaction-ashok-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="gbit-atm-transaction-ashok-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="put:\unblock:application\json:gbit-atm-transaction-ashok-config">
+        <ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: "Account 9989138070 is unblocked"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="post:\chechbalance:application\json:gbit-atm-transaction-ashok-config">
+        <ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: "Your total balance is xxxxxxxx as on 20-May-2020 is xxxxxx"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="post:\createaccount:application\json:gbit-atm-transaction-ashok-config">
+		<flow-ref doc:name="Flow Reference" doc:id="93c9b584-ec87-4835-be60-d75013a918a6" name="createAccountSubFlow"/>
+    </flow>
+    <flow name="post:\withdraw:application\json:gbit-atm-transaction-ashok-config">
+        <ee:transform doc:name="Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: "Amount xxxx is debited . Your total balance is 16000"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+</mule>

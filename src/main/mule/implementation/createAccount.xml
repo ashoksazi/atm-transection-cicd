@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:s3="http://www.mulesoft.org/schema/mule/s3"
+	xmlns:json="http://www.mulesoft.org/schema/mule/json"
+	xmlns:gmail="http://www.mulesoft.org/schema/mule/gmail" xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:rds="http://www.mulesoft.org/schema/mule/rds" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/rds http://www.mulesoft.org/schema/mule/rds/current/mule-rds.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/gmail http://www.mulesoft.org/schema/mule/gmail/current/mule-gmail.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	
+	<flow name="createAccountSubFlow" doc:id="8ae51b38-2572-4dbf-b5a5-5eff4aab35c1" >
+		<ee:transform doc:name="inputPayload" doc:id="e047d352-b7f6-44da-b2aa-a06b51819601" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="inputPayload" ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-variable>
+				<ee:set-variable variableName="transectionId" ><![CDATA[%dw 2.0
+output application/json
+---
+uuid()]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference To account-exist" doc:id="c7fe3aa9-65d6-4fcd-95e6-fc8fd53f2d60" name="account-exist" />
+		<ee:transform doc:name="mappingAccountHolderDetails" doc:id="919e8c41-9333-4a73-aa20-25e24bbdf2d5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "custName": attributes.queryParams.customerName ,
+  "custAccNum":vars.inputPayload.accountNum,
+  "atmPin": vars.inputPayload.atmPin as String ,
+  "bankName": attributes.queryParams.bank,
+  "accountType": attributes.queryParams."type",
+  "ifscCode": vars.inputPayload.ifscCode,
+  "branchName": attributes.queryParams.branchname,
+  "totalBalance":vars.inputPayload.depositAmount default 0,
+  "transactionTimeStamp": now(),
+  "mailId": vars.inputPayload.mailId,
+  "phoneNumber": vars.inputPayload.contact
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="6144ceee-1a9f-4f45-b9b6-198c8a483196" >
+			<when expression="#[isEmpty(vars.queryResult)]">
+				<json:validate-schema doc:name="input-validation" doc:id="c7c8d58d-748c-4b5d-bc71-f03c49c98665" schema="config/validSchema.json"/>
+				<logger level="INFO" doc:name="BeforeConnection" doc:id="4f84bbd5-29f5-45dd-8536-e8504f7f4b81" message='"Before Connection to database insert Connector"'/>
+				<db:insert doc:name="AddingCustmerAtmAccount" doc:id="094e2125-9216-47b4-a773-aa1f389abc86" config-ref="aws_rds" target="insertResult">
+					<reconnect count="3" />
+					<db:sql ><![CDATA[insert into Bank_Transactions ( custName,custAccNum, atmPin, bankName, accountType, ifscCode, branchName, totalBalance, 
+transactionTimeStamp,mailId, phoneNumber) 
+values(:custName,:custAccNum, :atmPin, :bankName, :accountType, :ifscCode, :branchName, :totalBalance, 
+:transactionTimeStamp,:mailId, :phoneNumber)]]></db:sql>
+					<db:parameter-types />
+					<db:input-parameters ><![CDATA[#[payload]]]></db:input-parameters>
+					<db:auto-generated-keys-column-indexes />
+				</db:insert>
+				<logger level="INFO" doc:name="afterConnection" doc:id="ffc68172-dbe4-462a-9d64-768e294b2bd1" message='#["After Connection to database insert  Connector"]' />
+				<choice doc:name="Choice" doc:id="bb68cdcd-9437-4995-8bd5-fb9dddbc6a6f">
+					<when expression="#[(vars.insertResult.affectedRows ) == 1]">
+						<scatter-gather doc:name="Scatter-Gather" doc:id="1f06e4d8-8483-4c31-91e3-35a64bee7943" target="scatterResult">
+							<route >
+								
+								<flow-ref doc:name="s3BucketRefrenceFlow" doc:id="77eed5f4-a903-4f1b-8fa0-f2f6f6021c3a" name="s3bucketSub_Flow"/>
+							</route>
+							<route >
+								<flow-ref doc:name="GmailRefrenceFlow" doc:id="957ec6bf-e14f-4db2-b6be-6c393ce8dc98" name="gmailFlowSub_Flow" />
+							</route>
+						</scatter-gather>
+						<ee:transform doc:name="responsePayload" doc:id="e49396af-e7a9-409d-b50f-a7e07fa4f596" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	
+	"status" : "Account Created Successfully with Account Number " ++ payload.custAccNum default "" ++ " with " ++ payload.bankName default ""
+	
+	} 
+]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</when>
+					<otherwise>
+						<raise-error doc:name="Raise error" doc:id="05b9d604-8aa2-4788-b0ba-25131f405e87" type="ACCOUNTHOLDER:DATAINSERTIONERROR" description="The Account holder data not inserted"/>
+					</otherwise>
+				</choice>
+			</when>
+			<otherwise >
+				<raise-error doc:name="Raise error" doc:id="e7f8e076-f123-45c2-84f2-02ad61897866" type="ACCOUNT:ACCOUNT_EXIST" description="Eliminates the Process of  Duplicate Account  Number Insertion"/>
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

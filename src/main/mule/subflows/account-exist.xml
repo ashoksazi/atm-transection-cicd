@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<sub-flow name="account-exist" doc:id="a3a6e9a5-a883-4143-9f51-16b92eaf7dfd" >
+		<logger level="INFO" doc:name="Logger" doc:id="e3f8045d-7006-4baf-9d8e-847f04aed4b3" message='#["Before Connection to checksAccountExist"]' />
+		<db:select doc:id="9e6416fe-ea7e-4d0f-8b06-83c729c5aa51" config-ref="aws_rds" target="queryResult" doc:name="checksAccountExist">
+			<reconnect count="3" />
+			<db:sql><![CDATA[#["SELECT * FROM Bank_Transactions WHERE  bankName =  '$(attributes.queryParams.bank)' and custAccNum = $(vars.inputPayload.accountNum) " ]]]></db:sql>
+		</db:select>
+		<logger level="INFO" doc:name="Logger" doc:id="e9479314-d038-44ef-8f47-b14e373c78a7" message='#["After Connection to checksAccountExist"]' />
+	</sub-flow>
+	
+	</mule>

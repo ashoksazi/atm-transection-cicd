@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:s3="http://www.mulesoft.org/schema/mule/s3" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd">
+	<sub-flow name="s3bucketSub_Flow" doc:id="43f7cbd1-6df0-4543-9f4d-04d1fe434b47" >
+		<s3:put-object doc:name="Put Object" doc:id="3f68eff3-2ead-49ca-adcc-5f6d35d471ac" config-ref="Amazon_S3_Configuration" bucketName="atm-transection-api" key='#[payload.custAccNum ++ "_" ++ payload.custName]' target="s3Result"/>
+	</sub-flow>
+</mule>

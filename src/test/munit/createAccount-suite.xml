@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<munit:config name="createAccount-suite.xml" >
+		<munit:parameterizations file="parameterizedMunit.yaml" />
+	</munit:config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="b17a36bd-3c1e-4641-9606-4e4ec534169b" basePath="/api">
+		<http:request-connection host="localhost" port="8081" />
+	</http:request-config>
+	<munit:test name="createAccountSubFlow-test" doc:id="8fb7423a-b749-4ef2-9ad2-4f27f98f89dd">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when" doc:id="368e3059-8645-45c0-a359-8b2592cec209" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="9e6416fe-ea7e-4d0f-8b06-83c729c5aa51" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:variables >
+						<munit-tools:variable key="queryResult" value="#[{}]" mediaType="application/java" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when" doc:id="54b4d50e-3fbb-445d-bccc-8d78c9038470" processor="db:insert">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="094e2125-9216-47b4-a773-aa1f389abc86" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:variables >
+						<munit-tools:variable key="insertResult" value='#[{"affectedRows":1}]' mediaType="application/java" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="c8695518-178b-4c33-af87-3ca03289df37" >
+				<munit:payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;readUrl("classpath://eventSources/clientinfopayload.json")]' />
+				<munit:attributes value='#[{"queryParams":{"customerName":"ashok", "branchname":"nadikudi","bank":"ICICI","type": "SAVINGS"}}]' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to createAccountSubFlow" doc:id="56124cf8-be8f-4ebd-a35d-8c7452bc0d43" name="createAccountSubFlow" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert that" doc:id="b88d9b69-b8ba-4c63-a922-c9d2dc5f33ad" expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="createAccount-suiteTest" doc:id="af23bd1c-9754-4f2b-bd87-d07cb994a78b">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when1" doc:id="8b95b0c0-6fce-4ec8-8c15-c2e64f814f32" processor="flow-ref">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute whereValue="c7fe3aa9-65d6-4fcd-95e6-fc8fd53f2d60" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:variables >
+						<munit-tools:variable key="queryResult" value='#["data":"already exist"]' mediaType="application/java" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when" doc:id="0b4857ee-9fa1-46ca-88fa-4b9d7c706d51" processor="raise-error">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="e7f8e076-f123-45c2-84f2-02ad61897866" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="ACCOUNT:ACCOUNT_EXIST" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<munit:set-event doc:name="Set Event" doc:id="aefba6ca-b1f3-4e37-9441-1defdb68e62d" >
+				<munit:payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;readUrl("classpath://eventSources/clientinfopayload.json")]' />
+				<munit:attributes value='#[{"queryParams":{"customerName":"ashok", "branchname":"nadikudi","bank":"ICICI","type": "SAVINGS"}}]' />
+			</munit:set-event>
+			<try doc:name="Try" doc:id="6b382966-b380-497a-ad52-46414c26c65a" >
+				<flow-ref doc:name="Flow Reference" doc:id="518755d4-c34f-4d55-bcf8-7239953527f3" name="createAccountSubFlow" />
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="2d7a564c-d406-4d6b-898a-b53c5cca530d" type="ACCOUNT:ACCOUNT_EXIST"/>
+				</error-handler>
+			</try>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="f82cba42-1528-48d3-a3a5-6607dfdfdea9" is="#[MunitTools::notNullValue()]" expression="#[payload]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="createAccount-suiteTest1" doc:id="cd640683-b9fd-4303-ae85-4a8b5bc7afd4">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="42ba5bde-3147-41d6-be97-5f4ce2dd30a2" processor="flow-ref" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="c7fe3aa9-65d6-4fcd-95e6-fc8fd53f2d60" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:variables >
+						<munit-tools:variable key="queryResult" value="#[Mule::p('inputPayload')]" mediaType="application/json" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock when1" doc:id="4e7b6878-2bf2-43fb-8651-701c5f040f32" processor="db:insert" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="094e2125-9216-47b4-a773-aa1f389abc86" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:variables >
+						<munit-tools:variable key="insertResult" value='#[{"affectedRows":0}]' mediaType="application/java" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="b18eb989-8945-40ca-ba4b-af85d1d990d4" >
+				<munit:payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;readUrl("classpath://eventSources/clientinfopayload.json")]' />
+				<munit:attributes value='#[{"queryParams":{"customerName":"ashok", "branchname":"nadikudi","bank":"ICICI","type": "SAVINGS"}}]' />
+			</munit:set-event>
+			<try doc:name="Try" doc:id="3a7e7cf2-3afb-4b3b-bd09-b126703ce1ec" >
+				<flow-ref doc:name="Flow-ref to createAccountSubFlow" doc:id="ee026598-35f1-4a43-8640-ba48f091ff7b" name="createAccountSubFlow" />
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="520e5658-a1b8-4d84-8f50-ef81a9cf9931" type="ACCOUNTHOLDER:DATAINSERTIONERROR"/>
+				</error-handler>
+			</try>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="ab3d4b49-a105-4906-a843-72d01ae92e34" expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="createAccount-suiteTest2" doc:id="c328eede-0f47-4a63-8144-66f9970c9282" timeOut="1200000">
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="gbit-atm-transaction-ashok-main" />
+			<munit:enable-flow-source value="createAccount-suiteTest2" />
+		</munit:enable-flow-sources>
+		<munit:execution >
+			<try doc:name="Try" doc:id="f7b8cda7-49c6-4efd-82c0-5a868df2a823" >
+				<http:request doc:name="Request" doc:id="3dd7d27b-9eed-41db-9082-1c204db80176" config-ref="HTTP_Request_configuration" path="/createaccount" responseTimeout="1000000" method="POST">
+				<http:body><![CDATA[#[{
+  "accountNum":"9989138079",
+  "atmPin": 1234,
+  "ifscCode": "ICICI1234",
+  "depositAmount": 20000,
+  "mailId": "sagiashok338@gmail.com",
+  "contact": "9989138070"
+}]]]></http:body>
+					<http:query-params ><![CDATA[#[{
+  "customerName":"Ashok",
+  "branchname":"nadikudi",
+  "bank":"ICICI",
+  "type":"SAVINGS"
+}]]]></http:query-params>
+			</http:request>
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="43766fc7-5c69-45c3-b36f-502024e052e5" type="HTTP:BAD_REQUEST"/>
+				</error-handler>
+			</try>
+			<logger level="INFO" doc:name="Logger" doc:id="88f33634-8e1e-4f3c-9623-eb26d2cd3aa3" message="before"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="796f02d7-b5e0-4787-961c-34a2a2efaa6e" expression="#[payload]" is="#[MunitTools::notNullValue()]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="createAccount-suiteTest3" doc:id="9b67b0c7-a3b9-4c0e-85df-2415faaaa67a">
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="gbit-atm-transaction-ashok-main" />
+		</munit:enable-flow-sources>
+		<munit:execution >
+			<try doc:name="Try" doc:id="b600f251-721d-4604-ad10-373f210c6f30" >
+				<http:request method="GET" doc:name="Request" doc:id="76eb7455-f907-44d6-90e2-e4cd09e1ebc1" config-ref="HTTP_Request_configuration" path="/createaccount" responseTimeout="1000000" >
+					<http:body ><![CDATA[#[{
+  "accountNum":"9989138079",
+  "atmPin": 1234,
+  "ifscCode": "ICICI1234",
+  "depositAmount": 20000,
+  "mailId": "sagiashok338@gmail.com",
+  "contact": "9989138070"
+}]]]></http:body>
+					<http:query-params ><![CDATA[#[{
+  "customerName":"Ashok",
+  "branchname":"nadikudi",
+  "bank":"ICICI",
+  "type":"savings"
+}]]]></http:query-params>
+				</http:request>
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="2b13864d-b204-4546-a576-27c786bcb8cf" type="HTTP:METHOD_NOT_ALLOWED" />
+				</error-handler>
+			</try>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="6514986c-fd6d-42f9-8e20-acf5d5da1b8d" expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="createAccount-suiteTest4" doc:id="20140908-6e54-42c5-b505-284f132f3dc8">
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="gbit-atm-transaction-ashok-main" />
+		</munit:enable-flow-sources>
+		<munit:execution >
+			<try doc:name="Try" doc:id="fbf86600-b0a3-4ea3-a260-55c38b7c1862" >
+				<http:request method="POST" doc:name="Request" doc:id="18e10c8e-affb-4704-a2a2-c719066b25b4" config-ref="HTTP_Request_configuration" path="/createaccount" responseTimeout="1000000" >
+					<http:body ><![CDATA[#[%dw 2.0
+output application/java
+---
+
+{
+  "accountNum":"9989138079",
+  "atmPin": 1234,
+  "ifscCode": "ICICI1234",
+  "depositAmount": 20000,
+  "mailId": "sagiashok338@gmail.com",
+  "contact": "9989138070"
+}]]]></http:body>
+					<http:query-params ><![CDATA[#[{
+  "customerName":"Ashok",
+  "branchname":"nadikudi",
+  "bank":"ICICI",
+  "type":"savings"
+}]]]></http:query-params>
+				</http:request>
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="d3e3eeae-7524-4adf-93e4-0c54b7feae63" type="HTTP:UNSUPPORTED_MEDIA_TYPE" />
+				</error-handler>
+			</try>
+			<logger level="INFO" doc:name="Logger" doc:id="6d3bc280-a664-492a-8515-7400130fea0f" />
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="a141c0d9-d457-41dc-97fd-260a0088e4c2" expression="#[payload]" is="#[MunitTools::notNullValue()]" />
+		</munit:validation>
+	</munit:test>
+
+
+</mule>

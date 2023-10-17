@@ -1,0 +1,11 @@
+listner:
+  host: "![y7EKhNZiJV4=]"
+  port: "![hhmE87X5LHk=]"
+  path: "/api/*"
+  
+db:
+  host: "![pM87v4tlhz1RY7f93Yhghkzfblhja2kwy0yHC0YoeQtK6gEyjCbKIAhmevLm1dZGXJj/evLWR0kLLxyDxqL9TA==]"
+  port: "![v0Jv8TYTbKk=]"
+  user: "![nm5n1m+XPvg=]"
+  password: "![/dZG7r+cyhl0gzUUL2+jdA==]"
+  dbname: "![u7Ij+Ydy07xnkEboQQKQ9w==]"

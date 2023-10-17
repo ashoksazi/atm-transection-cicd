@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	 <error-handler name="global_error_handler">
+	 <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="302604e0-277f-46de-8a78-1448a9583c67" type="ACCOUNT:ACCOUNT_EXIST">
+			<ee:transform doc:name="Transform Message" doc:id="b050607c-ab2f-4d44-a8e8-634e9dfc3504" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status":"Account  $(vars.inputPayload.accountNum default "") already exist"
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+            <set-variable value="#[400]" doc:name="Set HTTP Status - 400" doc:id="4dedb351-ab5a-4896-83c0-9412b07167a1" variableName="httpStatus"/>
+			<set-variable value='Bad request' doc:name="set Error Message" doc:id="9fb6b86b-1ed8-4003-bfcb-6e61c9faa0b4" variableName="errorMessage"/>
+			<set-variable value='#[(((error.description default "" replace "[" with "") replace "]" with "") splitBy "\n")]' doc:name="Set Error Description" doc:id="3e0dc81e-7f85-4286-a9b4-e963924a20ec" variableName="errorDescription"/>
+			<flow-ref doc:name="global-prepare-error-response-sub-flow" doc:id="ab83b9e8-c9cc-472b-ad8a-ea5abd127483" name="error-responseSub_Flow"/>
+            
+</on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="2a6e7b17-aa10-4318-a0a3-957f14c93ee1" type="ACCOUNTHOLDER:DATAINSERTIONERROR">
+			<ee:transform doc:name="Transform Message" doc:id="7ed0283f-24cf-4c89-a29a-1831d8e25681" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+
+---
+{
+	
+	"error":"the user information not inserted in database"
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="3aac2c8c-0f39-40eb-8bc5-37881c548fb6" type="JSON:SCHEMA_NOT_HONOURED">
+			<ee:transform doc:name="Transform Message" doc:id="4d4df951-c20e-4bfe-bb74-6de5c83730dc" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status":"JSON:SCHEMA_NOT_HONOURED"
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+		
+        
+</error-handler>
+</mule>

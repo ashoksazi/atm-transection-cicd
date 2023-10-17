@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:gmail="http://www.mulesoft.org/schema/mule/gmail"
+	xmlns:sockets="http://www.mulesoft.org/schema/mule/sockets" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/sockets http://www.mulesoft.org/schema/mule/sockets/current/mule-sockets.xsd
+http://www.mulesoft.org/schema/mule/gmail http://www.mulesoft.org/schema/mule/gmail/current/mule-gmail.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd">
+	<sub-flow name="gmailFlowSub_Flow" doc:id="ae2f25ae-04b2-43df-aeaa-68ea03989062" >
+		<logger level="INFO" doc:name="Logger" doc:id="ff8e4373-5e4f-4d88-a1ec-00f049a80ea6" message="gmailsubflowstarted"/>
+		<email:send doc:name="Send" doc:id="a04b6707-c72d-4ba6-b052-c60786254e07" config-ref="Email_SMTP" subject="Congratulations ! Account created" fromAddress="sagikumar338@gmail.com">
+			<email:to-addresses >
+				<email:to-address value="ashokchottu143@gmail.com" />
+			</email:to-addresses>
+			<email:body contentType="text/plain">
+				<email:content ><![CDATA[#["congratulations! Account Created Successfully with Account Number " ++ payload.custAccNum default "" ++ " with " ++ payload.bankName default ""]]]></email:content>
+			</email:body>
+		</email:send>
+		<ee:transform doc:name="Transform Message" doc:id="f6021705-a952-4191-99bf-4b61928542d6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="e319e873-6dbf-4d00-aa70-bfd4d51b15b3" message="gmailsubflowended"/>
+	</sub-flow>
+</mule>

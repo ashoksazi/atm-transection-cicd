@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_43f7cbd1_6df0_4543_9f4d_04d1fe434b47_Output_Variables_transectionId = String
+

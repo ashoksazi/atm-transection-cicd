@@ -1,0 +1,9 @@
+%dw 2.0
+
+type auto_644e5226_34c6_49c6_b9b2_87f5d742199a_Input_Variables_queryResult = Array<{ _?: java_lang_Object }>
+type java_lang_Object = {|  |} {"typeAlias": "Object",
+"class": "java.lang.Object",
+"typeId": "java.lang.Object"}
+
+
+
