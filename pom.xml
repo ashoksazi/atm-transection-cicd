@@ -9,13 +9,13 @@
 	<version>1.0.0-SNAPSHOT</version>
 	<packaging>mule-application</packaging>
 
-	<name>atm-transection-api-ashok</name>
+	<name>atm-transection-api-ashok338s</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-		<app.runtime>4.3.0-20230417</app.runtime>
+		<app.runtime>4.4.0-20230320</app.runtime>
 		<mule.maven.plugin.version>3.8.2</mule.maven.plugin.version>
 		<munit.version>2.3.14</munit.version>
 	</properties>
@@ -43,18 +43,16 @@
 					<cloudHubDeployment>
 						<uri>https://anypoint.mulesoft.com</uri>
 						<muleVersion>${app.runtime}</muleVersion>
-						<username>Srinivas338</username>
-						<password>Ashok@338@</password>
-						<applicationName>${cloudhub.application.name}</applicationName>
-						<environment>Design</environment>
-						<region>us-east-1</region>
+						<server>anypoint.platform</server>
+						<applicationName>gbit-atm-transection-api-deploy-338</applicationName>
+						<environment>Sandbox</environment>
+						<region>${region}</region>
 						<workers>1</workers>
 						<workerType>MICRO</workerType>
 						<properties>
-
+							<key>value</key>
 						</properties>
 					</cloudHubDeployment>
-
 
 				</configuration>
 			</plugin>
@@ -79,10 +77,13 @@
 							<format>html</format>
 						</formats>
 					</coverage>
+					<runtimeVersion>${app.runtime}</runtimeVersion>
+
 				</configuration>
 			</plugin>
 		</plugins>
 	</build>
+
 
 	<dependencies>
 		<dependency>
@@ -141,14 +142,14 @@
 		<dependency>
 			<groupId>com.mulesoft.munit</groupId>
 			<artifactId>munit-runner</artifactId>
-			<version>2.3.14</version>
+			<version>2.3.9</version>
 			<classifier>mule-plugin</classifier>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.mulesoft.munit</groupId>
 			<artifactId>munit-tools</artifactId>
-			<version>2.3.14</version>
+			<version>2.3.9</version>
 			<classifier>mule-plugin</classifier>
 			<scope>test</scope>
 		</dependency>
@@ -173,6 +174,7 @@
 			<url>https://repository.mulesoft.org/releases/</url>
 			<layout>default</layout>
 		</repository>
+
 	</repositories>
 
 	<pluginRepositories>
@@ -184,6 +186,10 @@
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
+		</pluginRepository>
+		<pluginRepository>
+			<id>mule-public</id>
+			<url>https://repository.mulesoft.org/nexus/content/repositories/releases</url>
 		</pluginRepository>
 	</pluginRepositories>
 
